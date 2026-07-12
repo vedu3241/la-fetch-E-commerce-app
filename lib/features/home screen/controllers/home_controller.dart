@@ -8,8 +8,22 @@ class HomeController extends GetxController {
   final categories = <String>[].obs;
   final selectedCategoryIndex = 0.obs;
 
+  final favoritedProducts = <String>{}.obs;
+
   final isProductListLoading = false.obs;
   final isCategoriesLoading = false.obs;
+
+  bool isProductFavorited(String productTitle) {
+    return favoritedProducts.contains(productTitle);
+  }
+
+  void toggleFavorite(String productTitle) {
+    if (favoritedProducts.contains(productTitle)) {
+      favoritedProducts.remove(productTitle);
+    } else {
+      favoritedProducts.add(productTitle);
+    }
+  }
 
   List<Product> get filteredProducts {
     final selectedIdx = selectedCategoryIndex.value;

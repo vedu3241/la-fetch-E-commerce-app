@@ -17,6 +17,7 @@ class Product {
     required this.rating,
   });
 
+  //to convert json to object
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
       id: json['id'],
@@ -25,10 +26,11 @@ class Product {
       description: json['description'],
       category: json['category'],
       image: json['image'],
-      rating: Rating.fromJson(json['rating']),
+      rating: Rating.fromJson(Map<String, dynamic>.from(json['rating'])),
     );
   }
 
+  //to convert object to json
   Map<String, dynamic> toJson() {
     return {
       'id': id,

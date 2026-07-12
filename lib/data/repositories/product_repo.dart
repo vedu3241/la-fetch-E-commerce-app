@@ -3,11 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:lafetch_ecom/data/models/product_model.dart';
 
 class ProductRepo {
-  // final http.Client _client;
-
-  // ProductRepo({http.Client? client}) : _client = client ?? http.Client();
-
-  /// Fetch all products from Fake Store API: https://fakestoreapi.com/products
+  /// Fetch all products
   Future<List<Product>> fetchAllProducts() async {
     try {
       final response = await http.get(
@@ -29,7 +25,7 @@ class ProductRepo {
     }
   }
 
-  /// Fetch single product by id from Fake Store API: https://fakestoreapi.com/products/1
+  /// Fetch single product by id
   Future<Product> fetchSingleProduct(int id) async {
     try {
       final response = await http.get(
@@ -49,7 +45,7 @@ class ProductRepo {
     }
   }
 
-  /// Fetch all categories from Fake Store API: https://fakestoreapi.com/products/categories
+  /// Fetch all categories
   Future<List<String>> fetchCategories() async {
     try {
       final response = await http.get(

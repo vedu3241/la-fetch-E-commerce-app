@@ -37,7 +37,7 @@ class NavView extends StatelessWidget {
     return Align(
       alignment: Alignment.bottomCenter,
       child: Padding(
-        padding: const EdgeInsets.only(left: 28, right: 28, bottom: 24),
+        padding: const EdgeInsets.only(left: 28, right: 28, bottom: 10),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(40),
           child: BackdropFilter(

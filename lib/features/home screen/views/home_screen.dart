@@ -1,42 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lafetch_ecom/app/routes/app_routes.dart';
-import 'package:lafetch_ecom/data/models/product_model.dart';
 import 'package:lafetch_ecom/features/home%20screen/controllers/home_controller.dart';
+import 'package:lafetch_ecom/features/home%20screen/widgets/hero_section.dart';
+import 'package:lafetch_ecom/features/home%20screen/widgets/product_card.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  // int _selectedCategoryIndex = 0;
-  final Set<String> _favoritedProducts = {};
-
-  final controller = Get.find<HomeController>();
-
-  @override
   Widget build(BuildContext context) {
+    final controller = Get.find<HomeController>();
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
         backgroundColor: const Color(0xFF0F0F0F),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: Colors.white, size: 24),
-          onPressed: () {},
-        ),
-        title: Text(
-          "LA FETCH",
-          style: GoogleFonts.playfairDisplay(
-            fontSize: 22,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 4,
-            color: Colors.white,
-          ),
+
+        title: Image.asset(
+          "assets/logo/lafetch_logo.png",
+          width: 100,
+          fit: BoxFit.cover,
         ),
         centerTitle: true,
       ),
@@ -46,43 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
           physics: const BouncingScrollPhysics(),
           slivers: [
             // Hero Header Section
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(
-                  left: 20.0,
-                  right: 20.0,
-                  top: 24.0,
-                  bottom: 8.0,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "COLLECTION 2024",
-                      style: GoogleFonts.montserrat(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 2,
-                        color: Colors.grey.shade400,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    Text(
-                      "CHOSEN\nPIECES",
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 48,
-                        fontWeight: FontWeight.w400,
-                        height: 1.05,
-                        letterSpacing: 1.5,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Divider(color: const Color(0x14FFFFFF), thickness: 1),
-                  ],
-                ),
-              ),
-            ),
+            const HomeHeroSection(),
 
             // Horizontal Categories Scroll Tab Bar
             SliverToBoxAdapter(
@@ -131,7 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               children: [
                                 Text(
                                   controller.categories[index],
-                                  style: GoogleFonts.montserrat(
+                                  style: GoogleFonts.plusJakartaSans(
                                     fontSize: 11.5,
                                     fontWeight: isSelected
                                         ? FontWeight.w700
@@ -189,7 +137,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   );
                 }
 
-                if (controller.selectedCategoryIndex.value >= controller.categories.length) {
+                if (controller.selectedCategoryIndex.value >=
+                    controller.categories.length) {
                   return const SliverToBoxAdapter(child: SizedBox.shrink());
                 }
 
@@ -215,11 +164,18 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final product = filteredProducts[index];
-                    final isFavorited = _favoritedProducts.contains(
-                      product.title,
-                    );
 
-                    return _buildProductCard(product, isFavorited);
+                    return Obx(() {
+                      final isFavorited =
+                          controller.isProductFavorited(product.title);
+                      return ProductCard(
+                        product: product,
+                        isFavorited: isFavorited,
+                        onFavoritePressed: () {
+                          controller.toggleFavorite(product.title);
+                        },
+                      );
+                    });
                   }, childCount: filteredProducts.length),
                 );
               }),
@@ -231,152 +187,5 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildProductCard(Product product, bool isFavorited) {
-    return GestureDetector(
-      onTap: () {
-        Get.toNamed(AppRoutes.productDetails, arguments: product.id);
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Product image container with clean aesthetic background
-          Expanded(
-            child: Stack(
-              children: [
-                // Styled Container containing the network image
-                Container(
-                  width: double.infinity,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(8),
-                    color: Colors
-                        .white, // Standard premium fashion styling for web/app product images
-                  ),
-                  padding: const EdgeInsets.all(12),
-                  child: Image.network(
-                    product.image,
-                    fit: BoxFit.contain,
-                    loadingBuilder: (context, child, loadingProgress) {
-                      if (loadingProgress == null) return child;
-                      return Center(
-                        child: CircularProgressIndicator(
-                          value: loadingProgress.expectedTotalBytes != null
-                              ? loadingProgress.cumulativeBytesLoaded /
-                                    loadingProgress.expectedTotalBytes!
-                              : null,
-                          color: Colors.black26,
-                          strokeWidth: 2,
-                        ),
-                      );
-                    },
-                    errorBuilder: (context, error, stackTrace) {
-                      return Center(
-                        child: Icon(
-                          _getCategoryIcon(product.category),
-                          size: 38,
-                          color: Colors.grey,
-                        ),
-                      );
-                    },
-                  ),
-                ),
-
-                // Favorite Heart Icon Button
-                Positioned(
-                  top: 12,
-                  right: 12,
-                  child: GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        if (isFavorited) {
-                          _favoritedProducts.remove(product.title);
-                        } else {
-                          _favoritedProducts.add(product.title);
-                        }
-                      });
-                    },
-                    child: Container(
-                      height: 36,
-                      width: 36,
-                      decoration: BoxDecoration(
-                        color: const Color(0x66000000),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: const Color(0x14FFFFFF),
-                          width: 1,
-                        ),
-                      ),
-                      child: Icon(
-                        isFavorited ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorited ? Colors.redAccent : Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Product Details Text
-          Text(
-            product.category.toUpperCase(),
-            style: GoogleFonts.montserrat(
-              fontSize: 9,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1.0,
-              color: const Color(0x66FFFFFF),
-            ),
-          ),
-
-          const SizedBox(height: 5),
-
-          Text(
-            product.title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: GoogleFonts.playfairDisplay(
-              fontSize: 15,
-              fontWeight: FontWeight.w400,
-              color: Colors.white,
-              height: 1.25,
-            ),
-          ),
-
-          const SizedBox(height: 6),
-
-          Text(
-            "\$${product.price.toStringAsFixed(2)}",
-            style: GoogleFonts.montserrat(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w500,
-              color: const Color(0xD9FFFFFF),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category.toUpperCase()) {
-      case "JEWELRY":
-      case "JEWELERY":
-        return Icons.auto_awesome_outlined;
-      case "ELECTRONICS":
-        return Icons.headphones_outlined;
-      case "CLOTHING":
-      case "MEN'S CLOTHING":
-      case "WOMEN'S CLOTHING":
-        return Icons.checkroom_outlined;
-      case "ACCESSORIES":
-        return Icons.work_outline_rounded;
-      default:
-        return Icons.shopping_bag_outlined;
-    }
   }
 }

@@ -8,6 +8,7 @@ class ProductDetailController extends GetxController {
   final Rxn<Product> product = Rxn<Product>();
   final RxBool isLoading = false.obs;
   final RxString error = ''.obs;
+  final RxInt activeImageIndex = 0.obs;
   
   int? productId;
 
@@ -15,7 +16,11 @@ class ProductDetailController extends GetxController {
   void onInit() {
     super.onInit();
     final args = Get.arguments;
-    if (args is int) {
+    if (args is Product) {
+      product.value = args;
+      productId = args.id;
+      loadProduct(args.id);
+    } else if (args is int) {
       productId = args;
       loadProduct(args);
     } else {
@@ -27,6 +32,7 @@ class ProductDetailController extends GetxController {
     try {
       isLoading.value = true;
       error.value = '';
+      activeImageIndex.value = 0;
       final fetchedProduct = await productRepo.fetchSingleProduct(id);
       product.value = fetchedProduct;
     } catch (e) {

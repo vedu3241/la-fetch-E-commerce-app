@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:lafetch_ecom/features/cart/controller/cart_controller.dart';
+import 'package:lafetch_ecom/data/models/product_model.dart';
 import 'package:lafetch_ecom/features/nav/controller/nav_controller.dart';
 import 'package:lafetch_ecom/features/product%20details/controller/product_details_controller.dart';
+import 'package:lafetch_ecom/features/product%20details/widgets/add_to_cart_button.dart';
+import 'package:lafetch_ecom/features/product%20details/widgets/network_product_image.dart';
+import 'package:lafetch_ecom/features/product%20details/widgets/product_info_section.dart';
 
 class ProductDetailsScreen extends GetView<ProductDetailController> {
   const ProductDetailsScreen({super.key});
@@ -25,7 +28,7 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
         ),
         title: Text(
           "LA FETCH",
-          style: GoogleFonts.playfairDisplay(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 22,
             fontWeight: FontWeight.w600,
             letterSpacing: 4,
@@ -48,7 +51,7 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
         ],
       ),
       body: Obx(() {
-        if (controller.isLoading.value) {
+        if (controller.isLoading.value && controller.product.value == null) {
           return const Center(
             child: CircularProgressIndicator(
               color: Colors.white,
@@ -57,6 +60,7 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
           );
         }
 
+        // On error this block will get executed
         if (controller.error.isNotEmpty) {
           return Center(
             child: Padding(
@@ -72,7 +76,7 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
                   const SizedBox(height: 16),
                   Text(
                     "Failed to load product details",
-                    style: GoogleFonts.montserrat(
+                    style: GoogleFonts.plusJakartaSans(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -82,7 +86,7 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
                   const SizedBox(height: 8),
                   Text(
                     controller.error.value,
-                    style: GoogleFonts.montserrat(
+                    style: GoogleFonts.plusJakartaSans(
                       color: Colors.white54,
                       fontSize: 12,
                     ),
@@ -98,9 +102,10 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
+                    //retry button
                     child: Text(
                       "Retry",
-                      style: GoogleFonts.montserrat(
+                      style: GoogleFonts.plusJakartaSans(
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -111,19 +116,18 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
           );
         }
 
+        //if product not found
         final product = controller.product.value;
         if (product == null) {
           return Center(
             child: Text(
               "Product not found",
-              style: GoogleFonts.montserrat(color: Colors.white),
+              style: GoogleFonts.plusJakartaSans(color: Colors.white),
             ),
           );
         }
 
-        // Active image index local state
-        final RxInt activeImageIndex = 0.obs;
-
+        //if product is found show the details
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
           child: Column(
@@ -135,7 +139,7 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
                   padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
                   child: Text(
                     "PRODUCT DETAILS",
-                    style: GoogleFonts.montserrat(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 2.0,
@@ -146,56 +150,7 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
               ),
 
               // Main Image Container
-              Container(
-                margin: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
-                ),
-                width: double.infinity,
-                height: 380,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.all(28),
-                child: Obx(() {
-                  final idx = activeImageIndex.value;
-                  if (idx == 1) {
-                    // Zoomed/cropped variant
-                    return ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: OverflowBox(
-                        maxHeight: double.infinity,
-                        maxWidth: double.infinity,
-                        child: SizedBox(
-                          width: 480,
-                          height: 480,
-                          child: Image.network(
-                            product.image,
-                            fit: BoxFit.cover,
-                            alignment: Alignment.center,
-                          ),
-                        ),
-                      ),
-                    );
-                  } else if (idx == 2) {
-                    // Monochromatic grayscale variant
-                    return ColorFiltered(
-                      colorFilter: const ColorFilter.mode(
-                        Colors.grey,
-                        BlendMode.saturation,
-                      ),
-                      child: Image.network(product.image, fit: BoxFit.contain),
-                    );
-                  } else {
-                    // Standard view
-                    return Hero(
-                      tag: 'product_image_${product.id}',
-                      child: Image.network(product.image, fit: BoxFit.contain),
-                    );
-                  }
-                }),
-              ),
+              ProductImageSection(controller: controller, product: product),
 
               // Camera spec/metadata row from mockup
               Center(
@@ -206,7 +161,7 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
                   ),
                   child: Text(
                     _getMockSpecs(product.category),
-                    style: GoogleFonts.montserrat(
+                    style: GoogleFonts.plusJakartaSans(
                       fontSize: 9.5,
                       fontWeight: FontWeight.w500,
                       color: const Color(0x4DFFFFFF),
@@ -216,207 +171,18 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 16),
-
-              // Interactive Thumbnails Row
-              Obx(() {
-                final currentIdx = activeImageIndex.value;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _buildThumbnail(
-                      index: 0,
-                      isSelected: currentIdx == 0,
-                      child: Image.network(product.image, fit: BoxFit.contain),
-                      onTap: () => activeImageIndex.value = 0,
-                    ),
-                    const SizedBox(width: 16),
-                    _buildThumbnail(
-                      index: 1,
-                      isSelected: currentIdx == 1,
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: OverflowBox(
-                          maxHeight: double.infinity,
-                          maxWidth: double.infinity,
-                          child: SizedBox(
-                            width: 100,
-                            height: 100,
-                            child: Image.network(
-                              product.image,
-                              fit: BoxFit.cover,
-                              alignment: Alignment.center,
-                            ),
-                          ),
-                        ),
-                      ),
-                      onTap: () => activeImageIndex.value = 1,
-                    ),
-                    const SizedBox(width: 16),
-                    _buildThumbnail(
-                      index: 2,
-                      isSelected: currentIdx == 2,
-                      child: ColorFiltered(
-                        colorFilter: const ColorFilter.mode(
-                          Colors.grey,
-                          BlendMode.saturation,
-                        ),
-                        child: Image.network(
-                          product.image,
-                          fit: BoxFit.contain,
-                        ),
-                      ),
-                      onTap: () => activeImageIndex.value = 2,
-                    ),
-                  ],
-                );
-              }),
-
-              const SizedBox(height: 28),
-
               // Product Info Block
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Collection category with line next to it
-                    Row(
-                      children: [
-                        Text(
-                          "${product.category.toUpperCase()} COLLECTION",
-                          style: GoogleFonts.montserrat(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            letterSpacing: 1.5,
-                            color: const Color(0x66FFFFFF),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Container(
-                            height: 1,
-                            color: const Color(0x1FFFFFFF),
-                          ),
-                        ),
-                      ],
-                    ),
+              ProductInfoSection(product: product),
+              const SizedBox(height: 32),
+              // Add To Cart Button (Full width rectangular)
+              AddToCartButton(product: product),
 
-                    const SizedBox(height: 14),
-
-                    // Product Title
-                    Text(
-                      product.title.toUpperCase(),
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w400,
-                        height: 1.2,
-                        letterSpacing: 1.0,
-                        color: Colors.white,
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // Price tag
-                    Text(
-                      "\$${product.price.toStringAsFixed(2)} USD",
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white,
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
-
-                    // Elegant Divider
-                    Container(height: 1, color: const Color(0x1FFFFFFF)),
-
-                    const SizedBox(height: 20),
-
-                    // Description text
-                    Text(
-                      product.description,
-                      style: GoogleFonts.montserrat(
-                        fontSize: 13.5,
-                        height: 1.6,
-                        color: const Color(0xB3FFFFFF),
-                        fontWeight: FontWeight.w400,
-                      ),
-                    ),
-
-                    const SizedBox(height: 32),
-
-                    // Add To Cart Button (Full width rectangular)
-                    ElevatedButton(
-                      onPressed: () {
-                        Get.find<CartController>().addToCart(product);
-                        Get.snackbar(
-                          'ADDED TO CART',
-                          '${product.title} has been added to your bag.',
-                          backgroundColor: const Color(0xEB1A1A1A),
-                          colorText: Colors.white,
-                          snackPosition: SnackPosition.TOP,
-                          margin: const EdgeInsets.all(16),
-                          borderRadius: 8,
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white,
-                        foregroundColor: Colors.black,
-                        minimumSize: const Size(double.infinity, 54),
-                        shape: const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.zero,
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        "ADD TO CART",
-                        style: GoogleFonts.montserrat(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 2.0,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 48),
-                  ],
-                ),
-              ),
+              const SizedBox(height: 48),
             ],
           ),
         );
       }),
-    );
-  }
-
-  Widget _buildThumbnail({
-    required int index,
-    required bool isSelected,
-    required Widget child,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        height: 64,
-        width: 64,
-        padding: const EdgeInsets.all(6),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: isSelected
-                ? const Color(0xff8E66CF)
-                : const Color(0x1FFFFFFF),
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: child,
-      ),
     );
   }
 
@@ -434,5 +200,63 @@ class ProductDetailsScreen extends GetView<ProductDetailController> {
       default:
         return "LIMITED EDITION   •   HAND-CRAFTED DETAILED   •   EXCLUSIVELY STYLED";
     }
+  }
+}
+
+class ProductImageSection extends StatelessWidget {
+  const ProductImageSection({
+    super.key,
+    required this.controller,
+    required this.product,
+  });
+
+  final ProductDetailController controller;
+  final Product? product;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      width: double.infinity,
+      height: 380,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      padding: const EdgeInsets.all(28),
+      child: controller.activeImageIndex.value == 1
+          ? ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: OverflowBox(
+                maxHeight: double.infinity,
+                maxWidth: double.infinity,
+                child: SizedBox(
+                  width: 480,
+                  height: 480,
+                  child: NetworkProductImage(
+                    imageUrl: product!.image,
+                    fit: BoxFit.cover,
+                    alignment: Alignment.center,
+                  ),
+                ),
+              ),
+            )
+          : controller.activeImageIndex.value == 2
+          ? NetworkProductImage(
+              imageUrl: product!.image,
+              fit: BoxFit.contain,
+              colorFilter: const ColorFilter.mode(
+                Colors.grey,
+                BlendMode.saturation,
+              ),
+            )
+          : Hero(
+              tag: 'product_image_${product!.id}',
+              child: NetworkProductImage(
+                imageUrl: product!.image,
+                fit: BoxFit.contain,
+              ),
+            ),
+    );
   }
 }

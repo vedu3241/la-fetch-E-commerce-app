@@ -13,7 +13,7 @@ class FavouritesScreen extends StatelessWidget {
         elevation: 0,
         title: Text(
           "Favourites",
-          style: GoogleFonts.playfairDisplay(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 22,
             fontWeight: FontWeight.w600,
             color: Colors.white,
@@ -24,7 +24,7 @@ class FavouritesScreen extends StatelessWidget {
       body: Center(
         child: Text(
           "No favorites yet",
-          style: GoogleFonts.montserrat(
+          style: GoogleFonts.plusJakartaSans(
             color: const Color(0x66FFFFFF),
             fontSize: 14,
           ),

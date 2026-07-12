@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:lafetch_ecom/app/routes/app_pages.dart';
 import 'package:lafetch_ecom/app/routes/app_routes.dart';
 import 'package:get/get.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await Hive.openBox('cart_box');
   runApp(const MyApp());
 }
 
@@ -18,6 +23,8 @@ class MyApp extends StatelessWidget {
       title: 'Flutter Demo',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        fontFamily: GoogleFonts.plusJakartaSans().fontFamily,
+        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
       ),
       getPages: AppPages.pages,
       initialRoute: AppRoutes.nav,
