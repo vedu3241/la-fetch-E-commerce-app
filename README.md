@@ -12,6 +12,7 @@
 ## 🎨 Visual Design & Aesthetics
 
 The application follows the **"NOIR & ÉPURE"** design language:
+
 - **Color Palette**: Deep dark tones, minimalist typography, and vibrant purple primary accents (`#8E66CF`).
 - **Typography**: Complete application integration with the **Plus Jakarta Sans** font family via Google Fonts.
 - **Micro-interactions**: Subtle glassmorphism, responsive navigation bar, and clean interactive elements to deliver a premium user experience.
@@ -42,6 +43,7 @@ lib/
 ```
 
 ### Key Architectural Layers:
+
 1. **Presentation Layer (`features/`)**: Every feature is self-contained with its own views, custom widgets, bindings, and GetX controllers. This prevents features from polluting each other's scopes.
 2. **Data Layer (`data/`)**: Handles serialization and deserialization (JSON mapping) and network operations. The repository patterns decouple UI widgets from raw HTTP client implementations.
 3. **Application Configuration (`app/`)**: Centralizes cross-cutting concerns like navigation routing paths and application themes.
@@ -53,11 +55,13 @@ lib/
 To provide a lightning-fast, reactive, and persistent user experience, the application utilizes a hybrid state management and storage strategy:
 
 ### 1. **GetX State Management & Dependency Injection**
+
 - **Reactive UI**: State variables use observables (`.obs`, `RxList`, `RxBool`) to trigger automatic, precise widget rebuilds without manual lifecycle handling.
 - **Dependency Injection**: Decoupled initialization via GetX `Bindings`. For example, repository files and controllers are instantiated lazily or globally using `Get.put()` and `Get.lazyPut()` when transitioning routes, managing resources efficiently.
 - **Navigation & Routing**: Utilizes `GetMaterialApp` and `GetPage` definitions for seamless named route navigation, transitions, and middleware capabilities.
 
 ### 2. **Hive Local Persistence**
+
 - **Persistence Layer**: To ensure the user's cart is not lost when closing the app, **Hive** (a lightweight, no-SQL key-value database written in pure Dart) is used.
 - **Operations**:
   - The cart state resides in a Hive box named `cart_box`.
@@ -65,6 +69,7 @@ To provide a lightning-fast, reactive, and persistent user experience, the appli
   - Upon startup, the controller loads and deserializes items to populate the reactive list.
 
 ### 3. **Networking**
+
 - Fetches real-time product catalogs and categories from the public [Fake Store API](https://fakestoreapi.com/) using standard HTTP client modules wrapped in repository wrappers.
 
 ---
@@ -74,7 +79,9 @@ To provide a lightning-fast, reactive, and persistent user experience, the appli
 Follow the steps below to setup and run the project locally.
 
 ### Prerequisites
+
 Make sure you have installed:
+
 - [Flutter SDK](https://docs.flutter.dev/get-started/install) (`>= 3.10.7`)
 - [Dart SDK](https://dart.dev/get-started)
 - IDE (VS Code or Android Studio) with Flutter & Dart extensions
@@ -83,24 +90,28 @@ Make sure you have installed:
 ### Installation Steps
 
 1. **Clone the Repository**
+
    ```bash
    git clone https://github.com/vedu3241/la-fetch-E-commerce-app.git
    cd la-fetch-E-commerce-app
    ```
 
 2. **Retrieve Flutter Dependencies**
+
    ```bash
    flutter pub get
    ```
 
 3. **Check Target Devices**
    Verify that a device/emulator is connected:
+
    ```bash
    flutter devices
    ```
 
 4. **Run the Application**
    Launch the application in debug mode:
+
    ```bash
    flutter run
    ```
@@ -114,3 +125,49 @@ Make sure you have installed:
      ```bash
      flutter build ipa --release
      ```
+
+---
+
+## 🐳 Running with Docker (Flutter Web)
+
+The repository includes a `Dockerfile` and `nginx.conf` that build the Flutter **web** version of the app and serve it via a lightweight NGINX server. This lets you (or anyone reviewing the project) run the web build without installing the Flutter SDK locally.
+
+### Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running (Docker Engine "running" status visible in the app)
+
+### Build the Image
+
+From the project root (same folder as the `Dockerfile`):
+
+```bash
+docker build -t la-fetch-web .
+```
+
+This is a multi-stage build:
+
+1. **Build stage** — pulls a Flutter SDK image, runs `flutter pub get` and `flutter build web --release` to produce the static web output.
+2. **Serve stage** — copies that output into an `nginx:alpine` image, configured via `nginx.conf` to handle single-page-app routing correctly.
+
+### Run the Container
+
+```bash
+docker run -p 8080:80 la-fetch-web
+```
+
+Then open your browser to:
+
+```
+http://localhost:8080
+```
+
+You should see the full La Fetch web app — product listing, product details, and cart — running entirely from the containerized build.
+
+### Stopping the Container
+
+Press `Ctrl+C` in the terminal running the container, or find and stop it separately:
+
+```bash
+docker ps
+docker stop <container_id>
+```
